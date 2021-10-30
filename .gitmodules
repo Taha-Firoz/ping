@@ -1,0 +1,4 @@
+[submodule "elinux/miniaudio"]
+	path = elinux/miniaudio
+	url = https://github.com/mackron/miniaudio.git
+	branch = dev-0.1.1
