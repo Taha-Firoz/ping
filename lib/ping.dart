@@ -10,10 +10,6 @@ import 'package:ping/messages.dart';
 class Ping {
   AudioPlayerApi api_ = AudioPlayerApi();
 
-  Future<void> initialize() async {
-    return await api_.initialize();
-  }
-
   Future<void> playFile(PlayMessage arg) async {
     return await api_.playFile(arg);
   }

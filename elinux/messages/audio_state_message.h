@@ -9,10 +9,10 @@
 
 enum audioControl
 {
-  pause,
-  stop,
-  play,
-  noop
+  pauseAudio,
+  stopAudio,
+  playAudio,
+  noopAudio
 };
 
 class AudioStateMessage
@@ -25,9 +25,9 @@ public:
   AudioStateMessage(AudioStateMessage const &) = default;
   AudioStateMessage &operator=(AudioStateMessage const &) = default;
 
-  void SetOperation(const audioControl operation)
+  void SetOperation(const int operation)
   {
-    operation_ = operation;
+    operation_ = static_cast<audioControl>(operation);
   }
 
   audioControl GetOperation() const { return operation_; }
@@ -49,9 +49,9 @@ public:
       auto map = std::get<flutter::EncodableMap>(value);
 
       flutter::EncodableValue &operation = map[flutter::EncodableValue("operation")];
-      if (std::holds_alternative<audioControl>(operation))
+      if (std::holds_alternative<int>(operation))
       {
-        message.SetOperation(std::get<audioControl>(operation));
+        message.SetOperation(std::get<int>(operation));
       }
 
     }

@@ -6,6 +6,7 @@
 #define PACKAGES_PING_PING_ELINUX_MESSAGES_VOLUME_MESSAGE_H_
 #include <flutter/binary_messenger.h>
 #include <flutter/encodable_value.h>
+#include <variant>
 
 class VolumeMessage {
  public:
@@ -32,8 +33,8 @@ class VolumeMessage {
       auto map = std::get<flutter::EncodableMap>(value);
 
       flutter::EncodableValue& volume = map[flutter::EncodableValue("volume")];
-      if (std::holds_alternative<float>(volume)) {
-        message.SetVolume(std::get<float>(volume));
+      if (std::holds_alternative<double>(volume)) {
+        message.SetVolume(std::get<double>(volume));
       }
     }
 

@@ -1,12 +1,12 @@
 #include "include/ping/ping_plugin.h"
 #include "miniaudio/miniaudio.h"
+#include "messages/messages.h"
 #include "ping_miniaudio.h"
 
 #include <flutter/basic_message_channel.h>
 #include <flutter/encodable_value.h>
 #include <flutter/plugin_registrar.h>
-#include <flutter/standard_method_codec.h>
-#include "messages.h"
+#include <flutter/standard_message_codec.h>
 #include <unistd.h>
 
 #include <map>
@@ -16,6 +16,8 @@
 
 namespace
 {
+  const std::string GetExecutableDirectory();
+  
   constexpr char playAudioFile[] =
       "dev.flutter.pigeon.AudioPlayerApi.playAudioFile";
 
@@ -27,10 +29,7 @@ namespace
 
   constexpr char getVolume[] =
       "dev.flutter.pigeon.AudioPlayerApi.getVolume";
-
-  constexpr char getAudioState[] =
-      "dev.flutter.pigeon.AudioPlayerApi.getAudioState";
-
+      
   constexpr char dispose[] =
       "dev.flutter.pigeon.AudioPlayerApi.dispose";
 
@@ -47,26 +46,25 @@ namespace
 
   private:
     void HandlePlayAudioFile(
-        const const flutter::EncodableValue &message,
+        const flutter::EncodableValue &message,
         flutter::MessageReply<flutter::EncodableValue> reply);
 
     void HandleSetAudioState(
-        const const flutter::EncodableValue &message,
+        const flutter::EncodableValue &message,
         flutter::MessageReply<flutter::EncodableValue> reply);
 
     void HandleSetVolume(
-        const const flutter::EncodableValue &message,
+        const flutter::EncodableValue &message,
         flutter::MessageReply<flutter::EncodableValue> reply);
 
     void HandleGetVolume(
-        const const flutter::EncodableValue &message,
+        const flutter::EncodableValue &message,
         flutter::MessageReply<flutter::EncodableValue> reply);
 
     void HandleDispose(
-        const const flutter::EncodableValue &message,
+        const flutter::EncodableValue &message,
         flutter::MessageReply<flutter::EncodableValue> reply);
 
-    bool is_playing = false;
     ma_result result;
     ma_decoder decoder;
     ma_device_config deviceConfig;
@@ -81,7 +79,7 @@ namespace
       auto channel =
           std::make_unique<flutter::BasicMessageChannel<flutter::EncodableValue>>(
               registrar->messenger(), playAudioFile,
-              &flutter::StandardMethodCodec::GetInstance());
+              &flutter::StandardMessageCodec::GetInstance());
 
       channel->SetMessageHandler(
           [plugin_pointer = plugin.get()](const auto &call, auto result)
@@ -94,7 +92,7 @@ namespace
       auto channel =
           std::make_unique<flutter::BasicMessageChannel<flutter::EncodableValue>>(
               registrar->messenger(), setAudioState,
-              &flutter::StandardMethodCodec::GetInstance());
+              &flutter::StandardMessageCodec::GetInstance());
 
       channel->SetMessageHandler(
           [plugin_pointer = plugin.get()](const auto &call, auto result)
@@ -107,7 +105,7 @@ namespace
       auto channel =
           std::make_unique<flutter::BasicMessageChannel<flutter::EncodableValue>>(
               registrar->messenger(), setVolume,
-              &flutter::StandardMethodCodec::GetInstance());
+              &flutter::StandardMessageCodec::GetInstance());
 
       channel->SetMessageHandler(
           [plugin_pointer = plugin.get()](const auto &call, auto result)
@@ -120,7 +118,7 @@ namespace
       auto channel =
           std::make_unique<flutter::BasicMessageChannel<flutter::EncodableValue>>(
               registrar->messenger(), getVolume,
-              &flutter::StandardMethodCodec::GetInstance());
+              &flutter::StandardMessageCodec::GetInstance());
 
       channel->SetMessageHandler(
           [plugin_pointer = plugin.get()](const auto &call, auto result)
@@ -133,7 +131,7 @@ namespace
       auto channel =
           std::make_unique<flutter::BasicMessageChannel<flutter::EncodableValue>>(
               registrar->messenger(), dispose,
-              &flutter::StandardMethodCodec::GetInstance());
+              &flutter::StandardMessageCodec::GetInstance());
 
       channel->SetMessageHandler(
           [plugin_pointer = plugin.get()](const auto &call, auto result)
@@ -150,12 +148,12 @@ namespace
   PingPlugin::~PingPlugin() {}
 
   void PingPlugin::HandlePlayAudioFile(
-      const const flutter::EncodableValue &message,
+      const flutter::EncodableValue &message,
       flutter::MessageReply<flutter::EncodableValue> reply)
   {
     flutter::EncodableMap messageResult;
     ma_device_state device_state = ma_device_get_state(&device);
-    if (device_state != ma_device_state_uninitialized || device_state != ma_device_state_stopped)
+    if (device_state != ma_device_state_uninitialized && device_state != ma_device_state_stopped)
     {
       messageResult.emplace(flutter::EncodableValue(kEncodableMapkeyError), flutter::EncodableValue("Some Error"));
       reply(flutter::EncodableValue(messageResult));
@@ -218,7 +216,7 @@ namespace
   }
 
   void PingPlugin::HandleSetAudioState(
-      const const flutter::EncodableValue &message,
+      const flutter::EncodableValue &message,
       flutter::MessageReply<flutter::EncodableValue> reply)
   {
     flutter::EncodableMap messageResult;
@@ -227,13 +225,13 @@ namespace
 
     switch (meta.GetOperation())
     {
-    case audioControl::noop:
+    case audioControl::noopAudio:
     {
       messageResult.emplace(flutter::EncodableValue(kEncodableMapkeyResult), flutter::EncodableValue());
       break;
     }
     // Stops and unitilizes devices so no more playback
-    case audioControl::stop:
+    case audioControl::stopAudio:
     {
       if (device_state == ma_device_state_started)
       {
@@ -253,7 +251,7 @@ namespace
       }
       break;
     }
-    case audioControl::play:
+    case audioControl::playAudio:
     {
       if (device_state == ma_device_state_stopped)
       {
@@ -274,7 +272,7 @@ namespace
       break;
     }
     // Only stops audio, resumable
-    case audioControl::pause:
+    case audioControl::pauseAudio:
     {
       if (device_state == ma_device_state_started)
       {
@@ -299,7 +297,7 @@ namespace
   }
 
   void PingPlugin::HandleSetVolume(
-      const const flutter::EncodableValue &message,
+      const flutter::EncodableValue &message,
       flutter::MessageReply<flutter::EncodableValue> reply)
   {
 
@@ -320,7 +318,7 @@ namespace
   }
 
   void PingPlugin::HandleGetVolume(
-      const const flutter::EncodableValue &message,
+      const flutter::EncodableValue &message,
       flutter::MessageReply<flutter::EncodableValue> reply)
   {
 
@@ -341,7 +339,7 @@ namespace
   }
 
   void PingPlugin::HandleDispose(
-      const const flutter::EncodableValue &message,
+      const flutter::EncodableValue &message,
       flutter::MessageReply<flutter::EncodableValue> reply)
   {
     flutter::EncodableMap messageResult;
