@@ -6,10 +6,13 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 # not be changed
 set(PLUGIN_NAME "ping_plugin")
 
+find_package(PkgConfig)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+pkg_check_modules(GLIB REQUIRED glib-2.0)
+
 add_library(${PLUGIN_NAME} SHARED "ping_plugin.cc" "miniaudio.cc")
 apply_standard_settings(${PLUGIN_NAME})
-set_target_properties(${PLUGIN_NAME} PROPERTIES
-  CXX_VISIBILITY_PRESET hidden)
+set_target_properties(${PLUGIN_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 target_include_directories(${PLUGIN_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
@@ -24,6 +27,16 @@ target_link_libraries(${PLUGIN_NAME}
     ${LIB_PTHREAD} 
     ${LIB_MATH} 
     ${CMAKE_DL_LIBS}
+)
+
+target_include_directories(${PLUGIN_NAME}
+  PRIVATE
+    ${GLIB_INCLUDE_DIRS}
+)
+
+target_link_libraries(${PLUGIN_NAME}
+  PRIVATE
+    ${GLIB_LIBRARIES}
 )
 
 # List of absolute paths to libraries that should be bundled with the plugin
