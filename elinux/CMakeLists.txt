@@ -17,6 +17,18 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+set(LIB_PTHREAD Threads::Threads)
+set(LIB_MATH m)
+# Link miniaudio -lpthread, -ldl & libmath(no checks if libmath already in libc)
+target_link_libraries(${PLUGIN_NAME} 
+  PRIVATE 
+    ${LIB_PTHREAD} 
+    ${LIB_MATH} 
+    ${CMAKE_DL_LIBS}
+)
+
 # List of absolute paths to libraries that should be bundled with the plugin
 set(ping_bundled_libraries
   ""
